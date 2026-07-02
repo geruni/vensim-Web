@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subsistema }} - Sistema de Gestión de Residuos SJL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Barra de navegación con pestañas -->
+    <nav class="navbar">
+        <div class="container">
+            <ul class="tabs">
+                {% for pestana in pestanas %}
+                <li class="tab {% if ruta_activa == pestana.ruta %}tab-active{% endif %}">
+                    <a href="{{ pestana.ruta }}">{{ pestana.nombre }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Encabezado del subsistema -->
+    <header class="subsistema-header">
+        <div class="container">
+            <h1 class="subsistema-titulo">{{ subsistema }}</h1>
+            <span class="badge">{{ indicador }}</span>
+        </div>
+    </header>
+
+    <!-- Gráficas -->
+    <section class="graficas">
+        <div class="container">
+            {% for posicion, nivel in niveles.items() %}
+            <div class="grafica-container">
+                <h3 class="grafica-titulo">{{ nivel.titulo }}</h3>
+                <div class="grafica-content">
+                    {{ nivel.grafica | safe }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Enlace de retorno -->
+    <div class="container">
+        <a href="/" class="btn-secondary">← Volver al inicio</a>
+    </div>
+
+    <!-- Nota al pie -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">Fuente: PIGARS San Juan de Lurigancho 2019-2023 · Modelo Vensim PySD</p>
+            <p class="footer-text">Universidad Nacional de Ingeniería - Dinámica de Sistemas</p>
+        </div>
+    </footer>
+</body>
+</html>

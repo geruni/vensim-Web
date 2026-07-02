@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Sistema de Gestión de Residuos SJL</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Barra de navegación con pestañas -->
+    <nav class="navbar">
+        <div class="container">
+            <ul class="tabs">
+                {% for pestana in pestanas %}
+                <li class="tab">
+                    <a href="{{ pestana.ruta }}">{{ pestana.nombre }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contenido del error -->
+    <section class="error-section">
+        <div class="container">
+            <div class="error-container">
+                <div class="error-icono">⚠️</div>
+                <h1 class="error-titulo">Error al cargar el subsistema</h1>
+                <p class="error-mensaje">{{ mensaje }}</p>
+
+                <div class="error-causas">
+                    <h3>Posibles causas:</h3>
+                    <ul>
+                        <li>El archivo <code>residuos_sjl.mdl</code> no está en <code>C:\xampp\htdocs\assets\vensim\</code></li>
+                        <li>XAMPP no está corriendo (Apache o MySQL apagado)</li>
+                        <li>El nombre del nivel en la base de datos no coincide con el modelo</li>
+                        <li>Variables de entorno mal configuradas en el archivo <code>.env</code></li>
+                    </ul>
+                </div>
+
+                <a href="/" class="btn-primary">← Volver al inicio</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nota al pie -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">Universidad Nacional de Ingeniería - Dinámica de Sistemas</p>
+        </div>
+    </footer>
+</body>
+</html>

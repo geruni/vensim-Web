@@ -1,0 +1,361 @@
+/* Variables de color del proyecto */
+:root {
+  --tierra-900: #3A2E1F;  /* fondo topbar */
+  --tierra-50:  #F7F3EC;  /* fondo general */
+  --tierra-100: #EDE4D3;  /* bordes suaves */
+  --teal-500:   #2F7A6E;  /* color principal activo */
+  --teal-50:    #E6F2EF;  /* fondo badges */
+  --alerta-500: #C4502E;  /* alertas / errores */
+  --ambar-500:  #C98A1F;  /* advertencias */
+  --linea:      #DDD3C2;  /* bordes generales */
+  --texto-1:    #241D14;  /* texto principal */
+  --texto-2:    #6E6253;  /* texto secundario */
+  --texto-3:    #9C9181;  /* texto muted */
+}
+
+/* Reset y estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--tierra-50);
+  color: var(--texto-1);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Topbar */
+.topbar {
+  background-color: var(--tierra-900);
+  color: white;
+  padding: 1rem 0;
+}
+
+.topbar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Hero section */
+.hero {
+  background-color: white;
+  padding: 3rem 0;
+  text-align: center;
+  border-bottom: 1px solid var(--linea);
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  color: var(--texto-1);
+  margin-bottom: 1rem;
+}
+
+.hero-description {
+  font-size: 1.1rem;
+  color: var(--texto-2);
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+
+/* Subsistemas section */
+.subsistemas {
+  padding: 3rem 0;
+}
+
+/* Grid de tarjetas */
+.tarjetas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Tarjetas individuales */
+.tarjeta {
+  background-color: white;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.tarjeta:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tarjeta-icono {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.tarjeta-titulo {
+  font-size: 1.5rem;
+  color: var(--texto-1);
+  margin-bottom: 0.5rem;
+}
+
+.tarjeta-indicador {
+  font-size: 0.9rem;
+  color: var(--texto-3);
+  margin-bottom: 1.5rem;
+}
+
+/* Botones */
+.btn-primary {
+  display: inline-block;
+  background-color: var(--teal-500);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #25635a;
+}
+
+.btn-secondary {
+  display: inline-block;
+  background-color: var(--tierra-100);
+  color: var(--texto-1);
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  margin: 2rem 0;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: var(--linea);
+}
+
+/* Barra de navegación con pestañas */
+.navbar {
+  background-color: white;
+  border-bottom: 2px solid var(--linea);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tabs {
+  display: flex;
+  list-style: none;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.tab {
+  flex: 1;
+  min-width: 150px;
+}
+
+.tab a {
+  display: block;
+  padding: 1rem;
+  text-align: center;
+  color: var(--texto-2);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.tab a:hover {
+  background-color: var(--tierra-50);
+  color: var(--texto-1);
+}
+
+.tab-active a {
+  color: var(--teal-500);
+  border-bottom-color: var(--teal-500);
+  background-color: var(--teal-50);
+}
+
+/* Encabezado de subsistema */
+.subsistema-header {
+  background-color: white;
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--linea);
+}
+
+.subsistema-titulo {
+  font-size: 2rem;
+  color: var(--texto-1);
+  margin-bottom: 0.5rem;
+}
+
+.badge {
+  display: inline-block;
+  background-color: var(--teal-50);
+  color: var(--teal-500);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Sección de gráficas */
+.graficas {
+  padding: 2rem 0;
+}
+
+.grafica-container {
+  background-color: white;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.grafica-titulo {
+  font-size: 1.3rem;
+  color: var(--texto-1);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--linea);
+}
+
+.grafica-content {
+  margin-top: 1rem;
+}
+
+/* Sección de error */
+.error-section {
+  padding: 3rem 0;
+}
+
+.error-container {
+  background-color: white;
+  border: 2px solid var(--alerta-500);
+  border-radius: 10px;
+  padding: 3rem;
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.error-icono {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-titulo {
+  font-size: 2rem;
+  color: var(--alerta-500);
+  margin-bottom: 1rem;
+}
+
+.error-mensaje {
+  font-size: 1.1rem;
+  color: var(--texto-1);
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: var(--tierra-50);
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.error-causas {
+  text-align: left;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: var(--tierra-50);
+  border-radius: 6px;
+}
+
+.error-causas h3 {
+  color: var(--texto-1);
+  margin-bottom: 1rem;
+}
+
+.error-causas ul {
+  list-style-position: inside;
+  color: var(--texto-2);
+}
+
+.error-causas li {
+  margin-bottom: 0.5rem;
+}
+
+.error-causas code {
+  background-color: white;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  color: var(--texto-1);
+  border: 1px solid var(--linea);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--tierra-100);
+  padding: 2rem 0;
+  text-align: center;
+  margin-top: 3rem;
+  border-top: 1px solid var(--linea);
+}
+
+.footer-text {
+  color: var(--texto-2);
+  font-size: 0.9rem;
+  margin: 0.3rem 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 1.8rem;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+  }
+
+  .tarjetas-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .tabs {
+    flex-direction: column;
+  }
+
+  .tab {
+    width: 100%;
+  }
+
+  .subsistema-titulo {
+    font-size: 1.5rem;
+  }
+
+  .error-container {
+    padding: 2rem 1rem;
+  }
+
+  .topbar-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* Mejoras de accesibilidad */
+a:focus, button:focus {
+  outline: 2px solid var(--teal-500);
+  outline-offset: 2px;
+}

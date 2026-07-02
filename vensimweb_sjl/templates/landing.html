@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Residuos Sólidos - San Juan de Lurigancho</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Barra superior -->
+    <header class="topbar">
+        <div class="container">
+            <h1 class="topbar-title">Sistema de Gestión de Residuos Sólidos — San Juan de Lurigancho</h1>
+        </div>
+    </header>
+
+    <!-- Hero section -->
+    <section class="hero">
+        <div class="container">
+            <h2 class="hero-title">Modelo de Dinámica de Sistemas</h2>
+            <p class="hero-description">
+                Influencia del crecimiento poblacional y la capacidad financiera municipal
+                sobre la gestión de residuos sólidos en San Juan de Lurigancho
+            </p>
+        </div>
+    </section>
+
+    <!-- Tarjetas de subsistemas -->
+    <section class="subsistemas">
+        <div class="container">
+            <div class="tarjetas-grid">
+                <!-- Tarjeta 1: Generación -->
+                <div class="tarjeta">
+                    <div class="tarjeta-icono">♻️</div>
+                    <h3 class="tarjeta-titulo">Generación</h3>
+                    <p class="tarjeta-indicador">GPC (kg/hab/día)</p>
+                    <a href="/generacion" class="btn-primary">Ver subsistema</a>
+                </div>
+
+                <!-- Tarjeta 2: Recolección -->
+                <div class="tarjeta">
+                    <div class="tarjeta-icono">🚛</div>
+                    <h3 class="tarjeta-titulo">Recolección</h3>
+                    <p class="tarjeta-indicador">Cobertura de recolección (%)</p>
+                    <a href="/recoleccion" class="btn-primary">Ver subsistema</a>
+                </div>
+
+                <!-- Tarjeta 3: Disposición -->
+                <div class="tarjeta">
+                    <div class="tarjeta-icono">🏗️</div>
+                    <h3 class="tarjeta-titulo">Disposición</h3>
+                    <p class="tarjeta-indicador">Vida útil remanente (años)</p>
+                    <a href="/disposicion" class="btn-primary">Ver subsistema</a>
+                </div>
+
+                <!-- Tarjeta 4: Valorización -->
+                <div class="tarjeta">
+                    <div class="tarjeta-icono">📦</div>
+                    <h3 class="tarjeta-titulo">Valorización</h3>
+                    <p class="tarjeta-indicador">Tasa de reciclaje formal (%)</p>
+                    <a href="/valorizacion" class="btn-primary">Ver subsistema</a>
+                </div>
+
+                <!-- Tarjeta 5: Financiamiento -->
+                <div class="tarjeta">
+                    <div class="tarjeta-icono">💰</div>
+                    <h3 class="tarjeta-titulo">Financiamiento</h3>
+                    <p class="tarjeta-indicador">Presupuesto per cápita (S/hab/año)</p>
+                    <a href="/financiamiento" class="btn-primary">Ver subsistema</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nota al pie -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">Datos calibrados 2019–2023 · Proyección a 2040</p>
+            <p class="footer-text">Universidad Nacional de Ingeniería - Dinámica de Sistemas</p>
+        </div>
+    </footer>
+</body>
+</html>
