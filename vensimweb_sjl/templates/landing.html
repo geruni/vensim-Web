@@ -3,81 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Residuos Sólidos - San Juan de Lurigancho</title>
+    <title>Gestión de Residuos Sólidos — San Juan de Lurigancho</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%E2%99%BB%EF%B8%8F%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- Barra superior -->
     <header class="topbar">
-        <div class="container">
-            <h1 class="topbar-title">Sistema de Gestión de Residuos Sólidos — San Juan de Lurigancho</h1>
+        <div class="topbar-inner">
+            <a href="/" class="brand">
+                <span class="brand-mark">♻</span>
+                <span class="brand-text">Residuos Sólidos <b>SJL</b></span>
+            </a>
+            <nav class="tabs">
+                {% for p in pestanas %}
+                <a href="{{ p.ruta }}" class="tab"><span class="tab-ico">{{ p.icono }}</span>{{ p.nombre }}</a>
+                {% endfor %}
+            </nav>
         </div>
     </header>
 
-    <!-- Hero section -->
     <section class="hero">
-        <div class="container">
-            <h2 class="hero-title">Modelo de Dinámica de Sistemas</h2>
-            <p class="hero-description">
-                Influencia del crecimiento poblacional y la capacidad financiera municipal
-                sobre la gestión de residuos sólidos en San Juan de Lurigancho
+        <div class="hero-inner">
+            <span class="hero-eyebrow">Dinámica de Sistemas · Modelo Vensim + PySD</span>
+            <h1 class="hero-title">Gestión de residuos sólidos en <span>San Juan de Lurigancho</span></h1>
+            <p class="hero-desc">
+                Un modelo de simulación que explora cómo el crecimiento poblacional y la capacidad
+                financiera municipal condicionan la recolección, disposición y valorización de residuos,
+                con proyección hasta 2040. Compara los resultados simulados contra datos reales observados.
             </p>
-        </div>
-    </section>
-
-    <!-- Tarjetas de subsistemas -->
-    <section class="subsistemas">
-        <div class="container">
-            <div class="tarjetas-grid">
-                <!-- Tarjeta 1: Generación -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">♻️</div>
-                    <h3 class="tarjeta-titulo">Generación</h3>
-                    <p class="tarjeta-indicador">GPC (kg/hab/día)</p>
-                    <a href="/generacion" class="btn-primary">Ver subsistema</a>
-                </div>
-
-                <!-- Tarjeta 2: Recolección -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">🚛</div>
-                    <h3 class="tarjeta-titulo">Recolección</h3>
-                    <p class="tarjeta-indicador">Cobertura de recolección (%)</p>
-                    <a href="/recoleccion" class="btn-primary">Ver subsistema</a>
-                </div>
-
-                <!-- Tarjeta 3: Disposición -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">🏗️</div>
-                    <h3 class="tarjeta-titulo">Disposición</h3>
-                    <p class="tarjeta-indicador">Vida útil remanente (años)</p>
-                    <a href="/disposicion" class="btn-primary">Ver subsistema</a>
-                </div>
-
-                <!-- Tarjeta 4: Valorización -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">📦</div>
-                    <h3 class="tarjeta-titulo">Valorización</h3>
-                    <p class="tarjeta-indicador">Tasa de reciclaje formal (%)</p>
-                    <a href="/valorizacion" class="btn-primary">Ver subsistema</a>
-                </div>
-
-                <!-- Tarjeta 5: Financiamiento -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">💰</div>
-                    <h3 class="tarjeta-titulo">Financiamiento</h3>
-                    <p class="tarjeta-indicador">Presupuesto per cápita (S/hab/año)</p>
-                    <a href="/financiamiento" class="btn-primary">Ver subsistema</a>
-                </div>
+            <div class="hero-cta">
+                <a href="/dashboard/generacion" class="btn btn-primary btn-lg">Abrir panel de análisis</a>
+                <a href="#subsistemas" class="btn btn-lg">Ver subsistemas</a>
             </div>
         </div>
     </section>
 
-    <!-- Nota al pie -->
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">Datos calibrados 2019–2023 · Proyección a 2040</p>
-            <p class="footer-text">Universidad Nacional de Ingeniería - Dinámica de Sistemas</p>
+    <section class="features" id="subsistemas">
+        <h2 class="features-title">Cinco subsistemas interconectados</h2>
+        <p class="features-sub">Cada uno con su indicador clave. Explora, superpón niveles y saca ratios.</p>
+        <div class="cards-grid">
+            {% for p in pestanas %}
+            <a href="{{ p.ruta }}" class="feature-card">
+                <div class="feature-ico">{{ p.icono }}</div>
+                <h3>{{ p.nombre }}</h3>
+                <p>{{ indicadores[p.clave] }}</p>
+                <span class="feature-link">Analizar →</span>
+            </a>
+            {% endfor %}
         </div>
+    </section>
+
+    <section class="destacados">
+        <div class="destacados-inner">
+            <div class="destacado"><b>132</b><span>variables del modelo</span></div>
+            <div class="destacado"><b>14</b><span>niveles (stocks)</span></div>
+            <div class="destacado"><b>2019–2040</b><span>horizonte de simulación</span></div>
+            <div class="destacado"><b>Real vs Sim</b><span>comparación y ratios</span></div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>Datos calibrados 2019–2023 · Proyección a 2040 · Fuente: PIGARS SJL</p>
+        <p>Universidad Nacional de Ingeniería — Dinámica de Sistemas</p>
     </footer>
 </body>
 </html>

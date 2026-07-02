@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ subsistema_nombre }} · Panel de Análisis · Residuos Sólidos SJL</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%E2%99%BB%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/plotly.min.js') }}"></script>
+</head>
+<body>
+    <!-- Barra superior -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a href="/" class="brand">
+                <span class="brand-mark">♻</span>
+                <span class="brand-text">Residuos Sólidos <b>SJL</b></span>
+            </a>
+            <nav class="tabs">
+                {% for p in pestanas %}
+                <a href="{{ p.ruta }}" class="tab {% if p.clave == subsistema %}is-active{% endif %}">
+                    <span class="tab-ico">{{ p.icono }}</span>{{ p.nombre }}
+                </a>
+                {% endfor %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Encabezado del subsistema -->
+    <div class="page-head">
+        <div>
+            <h1>{{ subsistema_nombre }}</h1>
+            <p class="page-sub">Panel interactivo · horizonte 2019–2040 · modelo Vensim (PySD)</p>
+        </div>
+        <span class="indicador-badge">{{ indicador }}</span>
+    </div>
+
+    <!-- Layout principal: controles + panel -->
+    <main class="layout">
+        <!-- Sidebar de controles -->
+        <aside class="sidebar">
+            <section class="ctrl-block">
+                <h2 class="ctrl-title">Modo de análisis</h2>
+                <div class="segmented" id="modo">
+                    <label><input type="radio" name="modo" value="superponer" checked><span>Superponer</span></label>
+                    <label><input type="radio" name="modo" value="comparar"><span>Real vs Simulado</span></label>
+                    <label><input type="radio" name="modo" value="ratio"><span>Ratio A / B</span></label>
+                </div>
+            </section>
+
+            <!-- Selección de niveles (modos superponer / comparar) -->
+            <section class="ctrl-block" id="bloque-niveles">
+                <h2 class="ctrl-title">Niveles a graficar</h2>
+                <div id="lista-niveles" class="niveles"></div>
+                <div class="ctrl-actions">
+                    <button class="link-btn" id="sel-todos">Todos</button>
+                    <button class="link-btn" id="sel-ninguno">Ninguno</button>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="normalizar">
+                    <span>Normalizar (índice 100 en 2019)</span>
+                </label>
+            </section>
+
+            <!-- Selección de ratio (modo ratio) -->
+            <section class="ctrl-block hidden" id="bloque-ratio">
+                <h2 class="ctrl-title">Variables del ratio</h2>
+                <label class="field-label">Numerador (A)</label>
+                <select id="ratio-a" class="select"></select>
+                <label class="field-label">Denominador (B)</label>
+                <select id="ratio-b" class="select"></select>
+            </section>
+
+            <section class="ctrl-block">
+                <button class="btn btn-primary btn-block" id="btn-graficar">Actualizar gráfico</button>
+                <div class="ctrl-actions">
+                    <button class="btn btn-ghost" id="btn-csv">⤓ CSV</button>
+                    <button class="btn btn-ghost" id="btn-guardar">★ Guardar escenario</button>
+                </div>
+            </section>
+
+            <section class="ctrl-block">
+                <h2 class="ctrl-title">Escenarios guardados</h2>
+                <div id="lista-escenarios" class="escenarios"><p class="muted">Cargando…</p></div>
+            </section>
+        </aside>
+
+        <!-- Panel de resultados -->
+        <section class="panel">
+            <div class="kpis" id="kpis"></div>
+
+            <div class="card chart-card">
+                <div class="card-head">
+                    <h3 id="chart-title">Gráfico</h3>
+                    <span class="chip" id="chart-hint"></span>
+                </div>
+                <div id="chart" class="chart"></div>
+            </div>
+
+            <div class="card table-card hidden" id="tabla-card">
+                <div class="card-head">
+                    <h3>Comparación real vs simulado</h3>
+                    <span class="chip chip-muted">MAPE = error porcentual absoluto medio</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="tabla" id="tabla-comp"></table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Fuente: PIGARS San Juan de Lurigancho 2019–2023 · Modelo Vensim (PySD) · Datos reales calibrados</p>
+        <p>Universidad Nacional de Ingeniería — Dinámica de Sistemas</p>
+    </footer>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script>
+        window.__CFG__ = {
+            subsistema: {{ subsistema|tojson }},
+            subsistemaNombre: {{ subsistema_nombre|tojson }},
+            niveles: {{ niveles|tojson }},
+            catalogo: {{ catalogo|tojson }}
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

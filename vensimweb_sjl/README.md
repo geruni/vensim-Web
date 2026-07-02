@@ -100,13 +100,53 @@ vensimweb_sjl/
 
 ## Subsistemas disponibles
 
-El sistema está dividido en 5 subsistemas:
+El sistema está dividido en 5 subsistemas, cada uno con su propio panel en `/dashboard/<subsistema>`:
 
-1. **Generación** (`/generacion`) - GPC y generación de residuos por tipo
-2. **Recolección** (`/recoleccion`) - Cobertura y flota de recolección
-3. **Disposición** (`/disposicion`) - Rellenos sanitarios y vida útil
-4. **Valorización** (`/valorizacion`) - Reciclaje y brecha de aprovechamiento
-5. **Financiamiento** (`/financiamiento`) - Presupuesto y déficit financiero
+1. **Generación** (`/dashboard/generacion`) - GPC y generación de residuos por tipo
+2. **Recolección** (`/dashboard/recoleccion`) - Cobertura y flota de recolección
+3. **Disposición** (`/dashboard/disposicion`) - Rellenos sanitarios y vida útil
+4. **Valorización** (`/dashboard/valorizacion`) - Reciclaje y brecha de aprovechamiento
+5. **Financiamiento** (`/dashboard/financiamiento`) - Presupuesto y déficit financiero
+
+## Panel de análisis interactivo
+
+Cada subsistema abre un panel con gráficos interactivos (Plotly, incluido localmente
+en `static/js/plotly.min.js`, sin necesidad de internet). Funciones:
+
+- **Elegir niveles y subniveles** a graficar mediante casillas agrupadas (ej. la
+  flota se desglosa en compactadores, volquetes y barandas).
+- **Superponer** varias series en un mismo gráfico, con opción de **normalizar**
+  (índice 100 en 2019) para comparar variables de distintas unidades de forma justa.
+- **Real vs Simulado**: superpone los datos reales observados (2019–2023) sobre la
+  curva simulada y muestra una tabla de comparación año por año con la diferencia
+  porcentual y el **MAPE** (error porcentual absoluto medio) coloreado por nivel de ajuste.
+- **Ratios A / B**: calcula y grafica el cociente entre cualquier par de variables
+  del modelo a lo largo del horizonte.
+- **KPIs** con el valor final, el cambio respecto a 2019, máximos y mínimos.
+- **Guardar escenarios** simulados en la base de datos y superponerlos luego para comparar.
+- **Exportar** el gráfico a PNG (barra de Plotly) o los datos a **CSV**.
+
+### API JSON (para desarrolladores)
+
+| Endpoint | Descripción |
+|---|---|
+| `GET /api/series?niveles=a,b` | Series simuladas de los niveles indicados |
+| `GET /api/comparar?subsistema=..&niveles=a,b` | Real vs simulado + diferencia, ratio y MAPE |
+| `GET /api/ratio?a=..&b=..` | Serie del cociente A/B en el tiempo |
+| `POST /api/guardar` | Guarda un escenario simulado (`{nombre, descripcion, niveles}`) |
+| `GET /api/escenarios` · `GET /api/escenario/<id>` | Lista / recupera escenarios guardados |
+
+## Base de datos
+
+El script `backup/vensimweb_sjl.sql` crea:
+
+- **5 tablas `*_config`** — configuración de cada gráfica (nivel, título, grupo, unidad, color).
+- **`datos_reales`** — valores reales observados 2019–2023 (calibrados a referencias de
+  SJL/PIGARS) para la comparación real vs simulado.
+- **`simulaciones`** y **`simulacion_datos`** — escenarios simulados guardados desde el panel.
+
+Los datos **simulados** se obtienen en vivo del modelo Vensim vía PySD; en la BD solo se
+guardan la configuración visual, los datos reales y los escenarios que el usuario decida persistir.
 
 ## Solución de problemas
 
@@ -136,9 +176,9 @@ El sistema está dividido en 5 subsistemas:
 
 ## Tecnologías utilizadas
 
-- **Backend**: Flask (Python)
-- **Simulación**: PySD
-- **Gráficas**: Matplotlib + mpld3
+- **Backend**: Flask (Python) — patrón MVC + Route
+- **Simulación**: PySD (lee y ejecuta el modelo Vensim `.mdl`)
+- **Gráficas**: Plotly.js (interactivas, incluidas localmente)
 - **Base de datos**: MySQL
 - **Servidor**: XAMPP (Apache + MySQL)
 - **Túnel público**: ngrok
