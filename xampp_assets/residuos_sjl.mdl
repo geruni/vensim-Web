@@ -149,15 +149,20 @@ fracc no aprovechables=
 	~	Fuente: PIGARS SJL
 	|
 
-generacion bruta anual= 
-	Generacion bruta * 365
+generacion bruta anual=
+	entrada generacion bruta * 365
 	~	ton/anio
-	~		|
+	~	Se usa el flujo (no el nivel, que queda congelado en su valor inicial \
+		porque su entrada y salida son identicas) para que la generacion anual \
+		si responda al crecimiento poblacional
+	|
 
-potencial reciclaje= 
-	Generacion reciclables * 365
+potencial reciclaje=
+	gen reciclables * 365
 	~	ton/anio
-	~	Techo fisico maximo de lo reciclable
+	~	Techo fisico maximo de lo reciclable. Se usa el flujo gen reciclables \
+		(no el nivel Generacion reciclables, que queda congelado) para que \
+		responda al crecimiento poblacional
 	|
 
 ********************************************************
