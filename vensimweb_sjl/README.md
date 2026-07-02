@@ -9,6 +9,7 @@ Aplicación web que simula un modelo de Dinámica de Sistemas (Vensim) para la g
    - Apache activo en el puerto 80
    - MySQL activo en el puerto 3306
 3. **Archivo del modelo**: `residuos_sjl.mdl` ubicado en `C:\xampp\htdocs\assets\vensim\`
+   - El archivo fuente se versiona en este repo en `../xampp_assets/residuos_sjl.mdl`. Cópialo a la ruta de XAMPP indicada arriba antes de levantar la app.
 
 ## Instalación
 
