@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, jsonify, Response
 from src.Models.model import getModelBySubsistema, getConfigCompleta
 from src.Controllers.controller import (
     get_series, comparar, ratio_entre,
-    guardar_escenario, listar_escenarios, get_escenario,
+    guardar_escenario, listar_escenarios, get_escenario, eliminar_escenario,
     PALANCAS, validar_params,
 )
 
@@ -85,8 +85,9 @@ def dashboard(subsistema='generacion'):
     if isinstance(todos, dict) and 'error' in todos:
         return render_template('error.html', mensaje=todos['error'], pestanas=PESTANAS)
 
-    # Lista plana para el selector de ratios (todos los subsistemas)
-    catalogo = [{'nivel': n, 'titulo': m['titulo'], 'subsistema': m['subsistema'], 'unidad': m['unidad']}
+    # Lista plana para el selector de ratios y la comparación de escenarios
+    catalogo = [{'nivel': n, 'titulo': m['titulo'], 'subsistema': m['subsistema'],
+                 'unidad': m['unidad'], 'color': m['color']}
                 for n, m in todos.items()]
 
     return render_template(
@@ -166,3 +167,8 @@ def api_escenarios():
 @routes.route('/api/escenario/<int:sim_id>')
 def api_escenario(sim_id):
     return _json_or_error(get_escenario(sim_id))
+
+
+@routes.route('/api/escenario/<int:sim_id>', methods=['DELETE'])
+def api_escenario_eliminar(sim_id):
+    return _json_or_error(eliminar_escenario(sim_id))

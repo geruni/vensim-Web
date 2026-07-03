@@ -160,6 +160,26 @@ def listarSimulaciones():
             conn.close()
         return {'error': 'Error al listar los escenarios guardados.'}
 
+def eliminarSimulacion(sim_id):
+    """Elimina un escenario guardado (sus datos caen en cascada)."""
+    conn = connect()
+    if isinstance(conn, dict) and 'error' in conn:
+        return conn
+    try:
+        cursor = conn.cursor()
+        connection_execute(cursor, "DELETE FROM simulaciones WHERE id = %s", (sim_id,))
+        conn.commit()
+        borrado = cursor.rowcount > 0
+        cursor.close()
+        conn.close()
+        if not borrado:
+            return {'error': f'No existe el escenario {sim_id}.'}
+        return {'ok': True}
+    except Exception:
+        if conn:
+            conn.close()
+        return {'error': 'No se pudo eliminar el escenario.'}
+
 def getSimulacion(sim_id):
     """Devuelve los datos de un escenario guardado {nivel, anio, valor}."""
     conn = connect()

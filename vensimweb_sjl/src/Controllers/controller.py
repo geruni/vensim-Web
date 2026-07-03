@@ -6,7 +6,7 @@ from decouple import config
 
 from src.Models.model import (
     getModelBySubsistema, getConfigCompleta, getDatosReales,
-    guardarSimulacion, listarSimulaciones, getSimulacion,
+    guardarSimulacion, listarSimulaciones, getSimulacion, eliminarSimulacion,
 )
 
 # Caché en memoria de simulaciones (la corrida de PySD es costosa).
@@ -248,6 +248,10 @@ def guardar_escenario(nombre, descripcion, niveles, params=None):
 
 def listar_escenarios():
     return listarSimulaciones()
+
+
+def eliminar_escenario(sim_id):
+    return eliminarSimulacion(sim_id)
 
 
 def get_escenario(sim_id):

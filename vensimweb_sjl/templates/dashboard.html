@@ -45,6 +45,7 @@
                     <label><input type="radio" name="modo" value="superponer" checked><span>Superponer</span></label>
                     <label><input type="radio" name="modo" value="comparar"><span>Real vs Simulado</span></label>
                     <label><input type="radio" name="modo" value="ratio"><span>Ratio A / B</span></label>
+                    <label><input type="radio" name="modo" value="escenarios"><span>Escenarios A vs B</span></label>
                 </div>
             </section>
 
@@ -73,6 +74,17 @@
                     <input type="checkbox" id="normalizar">
                     <span>Normalizar (índice 100 en 2019)</span>
                 </label>
+            </section>
+
+            <!-- Selección de escenarios (modo escenarios A vs B) -->
+            <section class="ctrl-block hidden" id="bloque-escenarios-comp">
+                <h2 class="ctrl-title">Escenarios a comparar</h2>
+                <label class="field-label">Escenario A</label>
+                <select id="esc-a" class="select"></select>
+                <label class="field-label">Escenario B</label>
+                <select id="esc-b" class="select"></select>
+                <p class="muted" style="margin-top:.6rem">Se grafican los niveles que ambos
+                   escenarios tienen guardados. "Corrida base" usa las palancas en su valor por defecto.</p>
             </section>
 
             <!-- Selección de ratio (modo ratio) -->
@@ -112,8 +124,8 @@
 
             <div class="card table-card hidden" id="tabla-card">
                 <div class="card-head">
-                    <h3>Comparación real vs simulado</h3>
-                    <span class="chip chip-muted">MAPE = error porcentual absoluto medio</span>
+                    <h3 id="tabla-titulo">Comparación real vs simulado</h3>
+                    <span class="chip chip-muted" id="tabla-hint">MAPE = error porcentual absoluto medio</span>
                 </div>
                 <div class="table-wrap">
                     <table class="tabla" id="tabla-comp"></table>

@@ -152,6 +152,17 @@
     $$("#lista-niveles input:checked").map((c) => c.value);
 
   const metaDe = (nivel) => CFG.niveles.find((n) => n.nivel === nivel) || {};
+  // metadatos globales (todos los subsistemas) para escenarios que cruzan pestañas
+  const metaCat = (nivel) =>
+    metaDe(nivel).titulo ? metaDe(nivel) : (CFG.catalogo.find((c) => c.nivel === nivel) || { titulo: nivel, unidad: "", color: "#2F7A6E" });
+
+  const palancasLegibles = (parametros) => {
+    if (!parametros) return "palancas base";
+    try {
+      const p = JSON.parse(parametros);
+      return Object.entries(p).map(([k, v]) => `${k} = ${v}`).join(" · ") || "palancas base";
+    } catch (e) { return "palancas base"; }
+  };
 
   // ---------- KPIs ----------
   function pintarKPIs(years, series) {
@@ -258,6 +269,8 @@
 
   function tablaComparacion(data) {
     const card = $("#tabla-card"); card.classList.remove("hidden");
+    $("#tabla-titulo").textContent = "Comparación real vs simulado";
+    $("#tabla-hint").textContent = "MAPE = error porcentual absoluto medio";
     const t = $("#tabla-comp");
     const niveles = Object.keys(data.series);
     // años con al menos un real
@@ -319,6 +332,98 @@
     });
   }
 
+  // ---------- render: ESCENARIOS A vs B ----------
+  async function datosDeEscenario(id, nivelesBase) {
+    if (id === "base") {
+      const d = await api("/api/series?niveles=" + encodeURIComponent(nivelesBase.join(",")));
+      const series = {};
+      Object.keys(d.series).forEach((n) => (series[n] = d.series[n].valores));
+      return { nombre: "Corrida base", parametros: null, years: d.years, series };
+    }
+    const meta = listaEscenarios.find((e) => String(e.id) === String(id)) || {};
+    const d = await api("/api/escenario/" + id);
+    return { nombre: meta.nombre || "Escenario " + id, parametros: meta.parametros, years: d.years, series: d.series };
+  }
+
+  async function renderEscenarios() {
+    const idA = $("#esc-a").value, idB = $("#esc-b").value;
+    if (!idA || !idB) { toast("Guarda al menos un escenario para poder comparar.", "warn"); return; }
+    if (idA === idB) { toast("Elige dos escenarios distintos.", "warn"); return; }
+
+    // el escenario guardado define qué niveles hay disponibles
+    const guardado = [idA, idB].find((x) => x !== "base");
+    let nivelesRef;
+    if (guardado) {
+      const prev = await api("/api/escenario/" + guardado);
+      nivelesRef = Object.keys(prev.series);
+    } else {
+      nivelesRef = nivelesSeleccionados();
+    }
+    if (!nivelesRef.length) { toast("Los escenarios no tienen niveles en común.", "warn"); return; }
+
+    const [A, B] = await Promise.all([datosDeEscenario(idA, nivelesRef), datosDeEscenario(idB, nivelesRef)]);
+    const niveles = Object.keys(A.series).filter((n) => B.series[n]);
+    if (!niveles.length) { toast("Los escenarios no comparten ningún nivel guardado.", "warn"); return; }
+
+    const traces = [];
+    niveles.forEach((nivel) => {
+      const m = metaCat(nivel);
+      traces.push({
+        x: A.years, y: A.series[nivel], name: `${m.titulo} · A`, mode: "lines",
+        line: { color: m.color, width: 2.6 },
+        hovertemplate: `%{x}: %{y:.2f} ${m.unidad}<extra>${m.titulo} · ${A.nombre}</extra>`,
+      });
+      traces.push({
+        x: B.years, y: B.series[nivel], name: `${m.titulo} · B`, mode: "lines",
+        line: { color: m.color, width: 2.2, dash: "dash" },
+        hovertemplate: `%{x}: %{y:.2f} ${m.unidad}<extra>${m.titulo} · ${B.nombre}</extra>`,
+      });
+    });
+    dibujar(traces, `Escenarios — A: ${A.nombre}  vs  B: ${B.nombre}`, "Valor");
+    $("#chart-hint").textContent = "A sólida · B discontinua";
+    ultimoDataset = { tipo: "escenarios", years: A.years, niveles, A, B };
+    kpisEscenarios(niveles, A, B);
+    tablaEscenarios(niveles, A, B);
+  }
+
+  function kpisEscenarios(niveles, A, B) {
+    const cont = $("#kpis"); cont.innerHTML = "";
+    niveles.slice(0, 4).forEach((nivel) => {
+      const m = metaCat(nivel);
+      const va = A.series[nivel].at(-1), vb = B.series[nivel].at(-1);
+      const d = va ? ((vb - va) / Math.abs(va)) * 100 : null;
+      const cls = d === null ? "" : d >= 0 ? "up" : "down";
+      const flecha = d === null ? "" : d >= 0 ? "▲" : "▼";
+      const card = document.createElement("div");
+      card.className = "kpi";
+      card.innerHTML =
+        `<div class="kpi-top"><span class="dot" style="background:${m.color}"></span>` +
+        `<span class="kpi-name">${m.titulo} — 2040</span></div>` +
+        `<div class="kpi-val">${fmt(vb)} <span class="kpi-unit">${m.unidad}</span></div>` +
+        `<div class="kpi-foot ${cls}">${flecha} ${d === null ? "—" : Math.abs(d).toFixed(1) + "% B vs A"}</div>`;
+      cont.appendChild(card);
+    });
+  }
+
+  function tablaEscenarios(niveles, A, B) {
+    const card = $("#tabla-card"); card.classList.remove("hidden");
+    $("#tabla-titulo").textContent = "Diferencias al final del horizonte (2040)";
+    $("#tabla-hint").textContent = `A: ${A.nombre} (${palancasLegibles(A.parametros)}) · B: ${B.nombre} (${palancasLegibles(B.parametros)})`;
+    const t = $("#tabla-comp");
+    let html = "<thead><tr><th>Nivel</th><th>A · 2040</th><th>B · 2040</th><th>Δ (B − A)</th><th>Δ%</th></tr></thead><tbody>";
+    niveles.forEach((nivel) => {
+      const m = metaCat(nivel);
+      const va = A.series[nivel].at(-1), vb = B.series[nivel].at(-1);
+      const d = vb - va;
+      const dp = va ? (d / Math.abs(va)) * 100 : null;
+      const cls = dp === null ? "" : Math.abs(dp) < 1 ? "" : dp > 0 ? "ok" : "bad";
+      html += `<tr><td class="td-nivel"><span class="dot" style="background:${m.color}"></span>${m.titulo}</td>` +
+        `<td>${fmt(va)}</td><td>${fmt(vb)}</td><td>${fmt(d)}</td>` +
+        `<td class="${cls}">${dp === null ? "—" : (dp >= 0 ? "+" : "") + dp.toFixed(1) + "%"}</td></tr>`;
+    });
+    t.innerHTML = html + "</tbody>";
+  }
+
   // ---------- Plotly ----------
   function dibujar(traces, titulo, yTitle) {
     $("#chart-title").textContent = titulo;
@@ -343,23 +448,53 @@
 
   // ---------- escenarios guardados ----------
   let escenarioActivo = null;
+  let listaEscenarios = [];
+
+  function poblarSelectsEscenarios() {
+    ["#esc-a", "#esc-b"].forEach((sel, i) => {
+      const s = $(sel);
+      const previo = s.value;
+      s.innerHTML = "";
+      s.appendChild(new Option("— Corrida base actual —", "base"));
+      listaEscenarios.forEach((e) => s.appendChild(new Option(e.nombre + (e.parametros ? " ⚙" : ""), e.id)));
+      // por defecto: A = base, B = escenario más reciente
+      if ([...s.options].some((o) => o.value === previo)) s.value = previo;
+      else if (i === 1 && listaEscenarios.length) s.value = String(listaEscenarios[0].id);
+    });
+  }
+
+  async function eliminarEscenario(id, nombre) {
+    if (!confirm(`¿Eliminar el escenario "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      await api("/api/escenario/" + id, { method: "DELETE" });
+      if (escenarioActivo && String(escenarioActivo.id) === String(id)) escenarioActivo = null;
+      toast(`Escenario "${nombre}" eliminado.`, "ok");
+      await cargarEscenarios();
+      if (modoActual() === "escenarios") render();
+    } catch (e) { toast(e.message, "warn"); }
+  }
+
   async function cargarEscenarios() {
     const cont = $("#lista-escenarios");
     try {
-      const lista = await api("/api/escenarios");
-      if (!lista.length) { cont.innerHTML = '<p class="muted">Aún no hay escenarios guardados.</p>'; return; }
+      listaEscenarios = await api("/api/escenarios");
+      poblarSelectsEscenarios();
+      if (!listaEscenarios.length) { cont.innerHTML = '<p class="muted">Aún no hay escenarios guardados.</p>'; return; }
       cont.innerHTML = "";
-      lista.forEach((e) => {
+      listaEscenarios.forEach((e) => {
         const el = document.createElement("div");
         el.className = "escenario";
-        const gear = e.parametros ? ' <span class="esc-gear" title="Escenario con palancas modificadas">⚙</span>' : "";
+        const gear = e.parametros ? ' <span class="esc-gear" title="' + palancasLegibles(e.parametros) + '">⚙</span>' : "";
         el.innerHTML =
           `<button class="esc-load" data-id="${e.id}">${e.nombre}${gear}</button>` +
-          `<span class="esc-fecha">${(e.creado || "").slice(0, 10)}</span>`;
+          `<span class="esc-fecha">${(e.creado || "").slice(0, 10)}</span>` +
+          `<button class="esc-del" data-id="${e.id}" data-nombre="${e.nombre}" title="Eliminar escenario">✕</button>`;
         cont.appendChild(el);
       });
       $$(".esc-load", cont).forEach((b) =>
         b.addEventListener("click", () => activarEscenario(b.dataset.id, b.textContent)));
+      $$(".esc-del", cont).forEach((b) =>
+        b.addEventListener("click", () => eliminarEscenario(b.dataset.id, b.dataset.nombre)));
     } catch (e) {
       cont.innerHTML = '<p class="muted">No se pudieron cargar los escenarios.</p>';
     }
@@ -418,6 +553,18 @@
     if (d.tipo === "ratio") {
       filas.push(["anio", "ratio"]);
       d.years.forEach((y, i) => filas.push([y, d.valores[i]]));
+    } else if (d.tipo === "escenarios") {
+      const cols = ["anio"];
+      d.niveles.forEach((n) => {
+        const t = metaCat(n).titulo;
+        cols.push(`${t} (A: ${d.A.nombre})`, `${t} (B: ${d.B.nombre})`);
+      });
+      filas.push(cols);
+      d.years.forEach((y, i) => {
+        const row = [y];
+        d.niveles.forEach((n) => row.push(d.A.series[n][i], d.B.series[n][i]));
+        filas.push(row);
+      });
     } else {
       const niveles = Object.keys(d.series);
       const cols = ["anio"];
@@ -448,8 +595,11 @@
   function modoActual() { return $('input[name=modo]:checked').value; }
   function aplicarModo() {
     const m = modoActual();
-    $("#bloque-niveles").classList.toggle("hidden", m === "ratio");
+    $("#bloque-niveles").classList.toggle("hidden", m === "ratio" || m === "escenarios");
     $("#bloque-ratio").classList.toggle("hidden", m !== "ratio");
+    $("#bloque-escenarios-comp").classList.toggle("hidden", m !== "escenarios");
+    // las palancas no aplican al comparar escenarios ya guardados
+    $("#bloque-palancas").classList.toggle("hidden", m === "escenarios");
   }
 
   async function render() {
@@ -459,6 +609,7 @@
       const m = modoActual();
       if (m === "superponer") await renderSuperponer();
       else if (m === "comparar") await renderComparar();
+      else if (m === "escenarios") await renderEscenarios();
       else await renderRatio();
     } catch (e) {
       toast(e.message || "Error al generar el gráfico.", "warn");
@@ -482,6 +633,8 @@
     $("#sel-ninguno").addEventListener("click", () => { $$("#lista-niveles input").forEach((c) => (c.checked = false)); });
     $("#ratio-a").addEventListener("change", () => modoActual() === "ratio" && render());
     $("#ratio-b").addEventListener("change", () => modoActual() === "ratio" && render());
+    $("#esc-a").addEventListener("change", () => modoActual() === "escenarios" && render());
+    $("#esc-b").addEventListener("change", () => modoActual() === "escenarios" && render());
     cargarEscenarios();
     render();
   }

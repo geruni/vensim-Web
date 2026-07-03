@@ -203,6 +203,11 @@ button { font-family: inherit; cursor: pointer; }
 }
 .esc-load:hover { border-color: var(--morado-500); color: var(--morado-500); }
 .esc-fecha { font-size: .72rem; color: var(--texto-3); }
+.esc-del {
+  background: none; border: 1px solid transparent; border-radius: 6px;
+  color: var(--texto-3); font-size: .78rem; padding: .2rem .4rem; line-height: 1;
+}
+.esc-del:hover { color: var(--alerta-500); border-color: var(--alerta-500); background: #fdf1ec; }
 
 /* ---------------- Panel ---------------- */
 .panel { display: grid; gap: 1.2rem; min-width: 0; }
