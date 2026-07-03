@@ -1,9 +1,5 @@
 flask
-pyngrok
+gunicorn
 pysd
-mysql-connector-python
 python-decouple
 numpy
-urllib3
-mpld3
-matplotlib

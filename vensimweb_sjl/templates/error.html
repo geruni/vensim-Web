@@ -3,51 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - Sistema de Gestión de Residuos SJL</title>
+    <title>Error · Residuos Sólidos SJL</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%E2%99%BB%EF%B8%8F%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- Barra de navegación con pestañas -->
-    <nav class="navbar">
-        <div class="container">
-            <ul class="tabs">
-                {% for pestana in pestanas %}
-                <li class="tab">
-                    <a href="{{ pestana.ruta }}">{{ pestana.nombre }}</a>
-                </li>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a href="/" class="brand">
+                <span class="brand-mark">♻</span>
+                <span class="brand-text">Residuos Sólidos <b>SJL</b></span>
+            </a>
+            <nav class="tabs">
+                {% for p in pestanas %}
+                <a href="{{ p.ruta }}" class="tab"><span class="tab-ico">{{ p.icono }}</span>{{ p.nombre }}</a>
                 {% endfor %}
-            </ul>
+            </nav>
         </div>
-    </nav>
+    </header>
 
-    <!-- Contenido del error -->
-    <section class="error-section">
-        <div class="container">
-            <div class="error-container">
-                <div class="error-icono">⚠️</div>
-                <h1 class="error-titulo">Error al cargar el subsistema</h1>
-                <p class="error-mensaje">{{ mensaje }}</p>
-
-                <div class="error-causas">
-                    <h3>Posibles causas:</h3>
-                    <ul>
-                        <li>El archivo <code>residuos_sjl.mdl</code> no está en <code>C:\xampp\htdocs\assets\vensim\</code></li>
-                        <li>XAMPP no está corriendo (Apache o MySQL apagado)</li>
-                        <li>El nombre del nivel en la base de datos no coincide con el modelo</li>
-                        <li>Variables de entorno mal configuradas en el archivo <code>.env</code></li>
-                    </ul>
-                </div>
-
-                <a href="/" class="btn-primary">← Volver al inicio</a>
+    <div class="error-wrap">
+        <div class="error-card">
+            <div class="error-ico">⚠️</div>
+            <h1>No se pudo cargar el panel</h1>
+            <p class="error-msg">{{ mensaje }}</p>
+            <div class="error-causas">
+                <h3>Posibles causas</h3>
+                <ul>
+                    <li>El archivo <code>residuos_sjl.mdl</code> no está en <code>C:\xampp\htdocs\assets\vensim\</code></li>
+                    <li>XAMPP no está corriendo (Apache o MySQL apagado)</li>
+                    <li>La base de datos <code>vensimweb_sjl</code> no fue importada desde <code>backup/vensimweb_sjl.sql</code></li>
+                    <li>El nombre de un nivel en la BD no coincide con el modelo Vensim</li>
+                    <li>Variables de entorno mal configuradas en el archivo <code>.env</code></li>
+                </ul>
             </div>
+            <a href="/" class="btn btn-primary btn-lg">← Volver al inicio</a>
         </div>
-    </section>
+    </div>
 
-    <!-- Nota al pie -->
     <footer class="footer">
-        <div class="container">
-            <p class="footer-text">Universidad Nacional de Ingeniería - Dinámica de Sistemas</p>
-        </div>
+        <p>Universidad Nacional de Ingeniería — Dinámica de Sistemas</p>
     </footer>
 </body>
 </html>

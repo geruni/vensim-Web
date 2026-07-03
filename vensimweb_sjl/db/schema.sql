@@ -1,10 +1,9 @@
--- vensimweb_sjl.sql  ·  Sistema de Gestion de Residuos Solidos SJL
--- Config de graficas (5 subsistemas) + datos reales observados + escenarios simulados guardados
+-- schema.sql · Sistema de Gestion de Residuos Solidos SJL (SQLite)
+-- Adaptado desde backup/vensimweb_sjl.sql (MySQL) para despliegue en Render.
+-- Config de graficas (5 subsistemas) + datos reales observados + escenarios simulados guardados.
 
-CREATE DATABASE IF NOT EXISTS vensimweb_sjl DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE vensimweb_sjl;
+PRAGMA foreign_keys = ON;
 
-SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS simulacion_datos;
 DROP TABLE IF EXISTS simulaciones;
 DROP TABLE IF EXISTS datos_reales;
@@ -13,92 +12,91 @@ DROP TABLE IF EXISTS recoleccion_config;
 DROP TABLE IF EXISTS disposicion_config;
 DROP TABLE IF EXISTS valorizacion_config;
 DROP TABLE IF EXISTS financiamiento_config;
-SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE generacion_config (
-    id       INT AUTO_INCREMENT PRIMARY KEY,
-    nivel    VARCHAR(100) NOT NULL,
-    titulo   VARCHAR(150),
-    grupo    VARCHAR(60),
-    eje_x    VARCHAR(100) DEFAULT 'Año',
-    eje_y    VARCHAR(100),
-    unidad   VARCHAR(40),
-    color    VARCHAR(20),
-    posicion INT
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    nivel    TEXT NOT NULL,
+    titulo   TEXT,
+    grupo    TEXT,
+    eje_x    TEXT DEFAULT 'Año',
+    eje_y    TEXT,
+    unidad   TEXT,
+    color    TEXT,
+    posicion INTEGER
 );
 
 CREATE TABLE recoleccion_config (
-    id       INT AUTO_INCREMENT PRIMARY KEY,
-    nivel    VARCHAR(100) NOT NULL,
-    titulo   VARCHAR(150),
-    grupo    VARCHAR(60),
-    eje_x    VARCHAR(100) DEFAULT 'Año',
-    eje_y    VARCHAR(100),
-    unidad   VARCHAR(40),
-    color    VARCHAR(20),
-    posicion INT
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    nivel    TEXT NOT NULL,
+    titulo   TEXT,
+    grupo    TEXT,
+    eje_x    TEXT DEFAULT 'Año',
+    eje_y    TEXT,
+    unidad   TEXT,
+    color    TEXT,
+    posicion INTEGER
 );
 
 CREATE TABLE disposicion_config (
-    id       INT AUTO_INCREMENT PRIMARY KEY,
-    nivel    VARCHAR(100) NOT NULL,
-    titulo   VARCHAR(150),
-    grupo    VARCHAR(60),
-    eje_x    VARCHAR(100) DEFAULT 'Año',
-    eje_y    VARCHAR(100),
-    unidad   VARCHAR(40),
-    color    VARCHAR(20),
-    posicion INT
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    nivel    TEXT NOT NULL,
+    titulo   TEXT,
+    grupo    TEXT,
+    eje_x    TEXT DEFAULT 'Año',
+    eje_y    TEXT,
+    unidad   TEXT,
+    color    TEXT,
+    posicion INTEGER
 );
 
 CREATE TABLE valorizacion_config (
-    id       INT AUTO_INCREMENT PRIMARY KEY,
-    nivel    VARCHAR(100) NOT NULL,
-    titulo   VARCHAR(150),
-    grupo    VARCHAR(60),
-    eje_x    VARCHAR(100) DEFAULT 'Año',
-    eje_y    VARCHAR(100),
-    unidad   VARCHAR(40),
-    color    VARCHAR(20),
-    posicion INT
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    nivel    TEXT NOT NULL,
+    titulo   TEXT,
+    grupo    TEXT,
+    eje_x    TEXT DEFAULT 'Año',
+    eje_y    TEXT,
+    unidad   TEXT,
+    color    TEXT,
+    posicion INTEGER
 );
 
 CREATE TABLE financiamiento_config (
-    id       INT AUTO_INCREMENT PRIMARY KEY,
-    nivel    VARCHAR(100) NOT NULL,
-    titulo   VARCHAR(150),
-    grupo    VARCHAR(60),
-    eje_x    VARCHAR(100) DEFAULT 'Año',
-    eje_y    VARCHAR(100),
-    unidad   VARCHAR(40),
-    color    VARCHAR(20),
-    posicion INT
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    nivel    TEXT NOT NULL,
+    titulo   TEXT,
+    grupo    TEXT,
+    eje_x    TEXT DEFAULT 'Año',
+    eje_y    TEXT,
+    unidad   TEXT,
+    color    TEXT,
+    posicion INTEGER
 );
 
 CREATE TABLE datos_reales (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
-    subsistema VARCHAR(40) NOT NULL,
-    nivel      VARCHAR(100) NOT NULL,
-    anio       INT NOT NULL,
-    valor      DOUBLE,
-    fuente     VARCHAR(160),
-    UNIQUE KEY uq_real (subsistema, nivel, anio)
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    subsistema TEXT NOT NULL,
+    nivel      TEXT NOT NULL,
+    anio       INTEGER NOT NULL,
+    valor      REAL,
+    fuente     TEXT,
+    UNIQUE (subsistema, nivel, anio)
 );
 
 CREATE TABLE simulaciones (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    nombre      VARCHAR(120) NOT NULL,
-    descripcion VARCHAR(255),
-    parametros  TEXT NULL,
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre      TEXT NOT NULL,
+    descripcion TEXT,
+    parametros  TEXT,
     creado      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE simulacion_datos (
-    id            INT AUTO_INCREMENT PRIMARY KEY,
-    simulacion_id INT NOT NULL,
-    nivel         VARCHAR(100) NOT NULL,
-    anio          INT NOT NULL,
-    valor         DOUBLE,
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    simulacion_id INTEGER NOT NULL,
+    nivel         TEXT NOT NULL,
+    anio          INTEGER NOT NULL,
+    valor         REAL,
     FOREIGN KEY (simulacion_id) REFERENCES simulaciones(id) ON DELETE CASCADE
 );
 
@@ -266,4 +264,3 @@ INSERT INTO datos_reales (subsistema, nivel, anio, valor, fuente) VALUES
 ('financiamiento', 'recaudacion efectiva', 2021, 51563044.0, 'Estimacion municipal SJL (calibracion 2019-2023)'),
 ('financiamiento', 'recaudacion efectiva', 2022, 63501029.0, 'Estimacion municipal SJL (calibracion 2019-2023)'),
 ('financiamiento', 'recaudacion efectiva', 2023, 68990466.0, 'Estimacion municipal SJL (calibracion 2019-2023)');
-

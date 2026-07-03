@@ -31,5 +31,8 @@ Thumbs.db
 # Logs
 *.log
 
-# Archivos de modelo Vensim descargados
-*.mdl
+# Base de datos SQLite generada por db/init_db.py (se recrea en cada build)
+*.db
+
+# Nota: el modelo Vensim (.mdl) SÍ se versiona a propósito
+# (model/residuos_sjl.mdl) porque la app lo lee del disco local.

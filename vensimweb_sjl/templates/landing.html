@@ -3,81 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Residuos Sólidos - San Juan de Lurigancho</title>
+    <title>Gestión de Residuos Sólidos — San Juan de Lurigancho</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%E2%99%BB%EF%B8%8F%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
 </head>
-<body>
-    <!-- Barra superior -->
-    <header class="topbar">
-        <div class="container">
-            <h1 class="topbar-title">Sistema de Gestión de Residuos Sólidos — San Juan de Lurigancho</h1>
-        </div>
-    </header>
+<body class="landing-body">
 
-    <!-- Hero section -->
-    <section class="hero">
-        <div class="container">
-            <h2 class="hero-title">Modelo de Dinámica de Sistemas</h2>
-            <p class="hero-description">
-                Influencia del crecimiento poblacional y la capacidad financiera municipal
-                sobre la gestión de residuos sólidos en San Juan de Lurigancho
+    <!-- ============ HERO ============ -->
+    <section class="lhero">
+        <canvas id="flow-canvas" aria-hidden="true"></canvas>
+        <div class="lhero-grain" aria-hidden="true"></div>
+
+        <header class="lhero-nav">
+            <a href="/" class="brand">
+                <span class="brand-mark">♻</span>
+                <span class="brand-text">Residuos Sólidos <b>SJL</b></span>
+            </a>
+            <nav class="lhero-tabs">
+                {% for p in pestanas %}
+                <a href="{{ p.ruta }}" class="lhero-tab">{{ p.nombre }}</a>
+                {% endfor %}
+            </nav>
+        </header>
+
+        <div class="lhero-content">
+            <span class="lhero-eyebrow reveal-up" style="--d:0">
+                <span class="pulse-dot"></span> Dinámica de Sistemas · Vensim + PySD · 2019–2040
+            </span>
+            <h1 class="lhero-title">
+                <span class="reveal-up" style="--d:1">1.2 millones de personas.</span>
+                <span class="reveal-up" style="--d:2">1,100 toneladas de residuos al día.</span>
+                <span class="reveal-up lhero-accent" style="--d:3">Un modelo para entenderlo todo.</span>
+            </h1>
+            <p class="lhero-desc reveal-up" style="--d:4">
+                Simulamos cómo el crecimiento poblacional y la capacidad financiera municipal
+                condicionan la gestión de residuos en San Juan de Lurigancho — el distrito
+                más poblado del Perú — y lo comparamos contra datos observados.
             </p>
+            <div class="lhero-cta reveal-up" style="--d:5">
+                <a href="/dashboard/generacion" class="btn-glow">Abrir panel de análisis <span class="arrow">→</span></a>
+                <a href="#sistema" class="btn-outline">Ver cómo funciona</a>
+            </div>
         </div>
+
+        <a href="#sistema" class="scroll-hint" aria-label="Bajar">
+            <span class="scroll-hint-wheel"></span>
+        </a>
     </section>
 
-    <!-- Tarjetas de subsistemas -->
-    <section class="subsistemas">
-        <div class="container">
-            <div class="tarjetas-grid">
-                <!-- Tarjeta 1: Generación -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">♻️</div>
-                    <h3 class="tarjeta-titulo">Generación</h3>
-                    <p class="tarjeta-indicador">GPC (kg/hab/día)</p>
-                    <a href="/generacion" class="btn-primary">Ver subsistema</a>
-                </div>
+    <!-- ============ DIAGRAMA DEL SISTEMA ============ -->
+    <section class="lsection" id="sistema">
+        <div class="lsection-head io-reveal">
+            <span class="ltag">El modelo</span>
+            <h2>Un sistema que se retroalimenta</h2>
+            <p>Cinco subsistemas conectados por flujos físicos y financieros.
+               Lo que ocurre en uno, tarde o temprano, aparece en los demás.</p>
+        </div>
 
-                <!-- Tarjeta 2: Recolección -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">🚛</div>
-                    <h3 class="tarjeta-titulo">Recolección</h3>
-                    <p class="tarjeta-indicador">Cobertura de recolección (%)</p>
-                    <a href="/recoleccion" class="btn-primary">Ver subsistema</a>
-                </div>
+        <div class="diagrama-wrap io-reveal">
+            <svg viewBox="0 0 960 420" class="diagrama" role="img"
+                 aria-label="Diagrama del sistema: Generación, Recolección, Disposición, Valorización y Financiamiento">
+                <defs>
+                    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+                    </marker>
+                </defs>
 
-                <!-- Tarjeta 3: Disposición -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">🏗️</div>
-                    <h3 class="tarjeta-titulo">Disposición</h3>
-                    <p class="tarjeta-indicador">Vida útil remanente (años)</p>
-                    <a href="/disposicion" class="btn-primary">Ver subsistema</a>
-                </div>
+                <!-- Flujos físicos (izq -> der) -->
+                <path id="p-gr" class="edge edge-fis" d="M232,120 C280,120 296,120 344,120" marker-end="url(#arr)"/>
+                <path id="p-rd" class="edge edge-fis" d="M616,120 C664,120 680,120 728,120" marker-end="url(#arr)"/>
+                <!-- Recolección -> Valorización (desvío de reciclables) -->
+                <path id="p-rv" class="edge edge-fis" d="M440,168 C400,230 340,260 268,288" marker-end="url(#arr)"/>
+                <!-- Valorización alivia Disposición -->
+                <path id="p-vd" class="edge edge-alivio" d="M320,310 C520,360 740,300 800,172" marker-end="url(#arr)"/>
+                <!-- Valorización -> Financiamiento (ingresos) -->
+                <path id="p-vf" class="edge edge-fin" d="M330,300 C440,300 500,300 588,300" marker-end="url(#arr)"/>
+                <!-- Financiamiento -> Recolección (inversión en flota) -->
+                <path id="p-fr" class="edge edge-fin" d="M660,262 C640,210 590,180 540,160" marker-end="url(#arr)"/>
+                <!-- Disposición -> Financiamiento (costos) -->
+                <path id="p-df" class="edge edge-costo" d="M812,168 C800,230 760,270 716,286" marker-end="url(#arr)"/>
+                <!-- Generación -> Financiamiento (arbitrios) -->
+                <path id="p-gf" class="edge edge-fin" d="M148,168 C170,330 420,392 600,326" marker-end="url(#arr)"/>
 
-                <!-- Tarjeta 4: Valorización -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">📦</div>
-                    <h3 class="tarjeta-titulo">Valorización</h3>
-                    <p class="tarjeta-indicador">Tasa de reciclaje formal (%)</p>
-                    <a href="/valorizacion" class="btn-primary">Ver subsistema</a>
-                </div>
+                <!-- pulsos viajeros -->
+                <circle class="mote mote-teal" r="4"><animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#p-gr"/></animateMotion></circle>
+                <circle class="mote mote-teal" r="4"><animateMotion dur="3.2s" begin="1.1s" repeatCount="indefinite"><mpath href="#p-rd"/></animateMotion></circle>
+                <circle class="mote mote-purple" r="4"><animateMotion dur="4s" begin=".4s" repeatCount="indefinite"><mpath href="#p-rv"/></animateMotion></circle>
+                <circle class="mote mote-amber" r="4"><animateMotion dur="4.5s" begin=".8s" repeatCount="indefinite"><mpath href="#p-vf"/></animateMotion></circle>
+                <circle class="mote mote-amber" r="4"><animateMotion dur="4.5s" begin="2.6s" repeatCount="indefinite"><mpath href="#p-fr"/></animateMotion></circle>
+                <circle class="mote mote-amber" r="4"><animateMotion dur="5.5s" begin="1.6s" repeatCount="indefinite"><mpath href="#p-gf"/></animateMotion></circle>
 
-                <!-- Tarjeta 5: Financiamiento -->
-                <div class="tarjeta">
-                    <div class="tarjeta-icono">💰</div>
-                    <h3 class="tarjeta-titulo">Financiamiento</h3>
-                    <p class="tarjeta-indicador">Presupuesto per cápita (S/hab/año)</p>
-                    <a href="/financiamiento" class="btn-primary">Ver subsistema</a>
-                </div>
+                <!-- Nodos -->
+                <g class="nodo" style="--nd:0">
+                    <rect x="64" y="72" width="168" height="96" rx="18"/>
+                    <text x="148" y="112" class="nodo-ico">♻️</text>
+                    <text x="148" y="146" class="nodo-tit">Generación</text>
+                </g>
+                <g class="nodo" style="--nd:1">
+                    <rect x="344" y="72" width="272" height="96" rx="18"/>
+                    <text x="480" y="112" class="nodo-ico">🚛</text>
+                    <text x="480" y="146" class="nodo-tit">Recolección y flota</text>
+                </g>
+                <g class="nodo" style="--nd:2">
+                    <rect x="728" y="72" width="180" height="96" rx="18"/>
+                    <text x="818" y="112" class="nodo-ico">🏗️</text>
+                    <text x="818" y="146" class="nodo-tit">Disposición</text>
+                </g>
+                <g class="nodo" style="--nd:3">
+                    <rect x="120" y="252" width="210" height="96" rx="18"/>
+                    <text x="225" y="292" class="nodo-ico">📦</text>
+                    <text x="225" y="326" class="nodo-tit">Valorización</text>
+                </g>
+                <g class="nodo" style="--nd:4">
+                    <rect x="588" y="252" width="230" height="96" rx="18"/>
+                    <text x="703" y="292" class="nodo-ico">💰</text>
+                    <text x="703" y="326" class="nodo-tit">Financiamiento</text>
+                </g>
+            </svg>
+
+            <div class="diagrama-leyenda">
+                <span><i class="ley ley-fis"></i> Flujo físico de residuos</span>
+                <span><i class="ley ley-fin"></i> Flujo financiero</span>
+                <span><i class="ley ley-alivio"></i> La valorización alivia los rellenos</span>
             </div>
         </div>
     </section>
 
-    <!-- Nota al pie -->
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">Datos calibrados 2019–2023 · Proyección a 2040</p>
-            <p class="footer-text">Universidad Nacional de Ingeniería - Dinámica de Sistemas</p>
+    <!-- ============ CIFRAS ============ -->
+    <section class="lstats">
+        <div class="lstats-inner">
+            <div class="lstat io-reveal" style="--d:0">
+                <b class="counter" data-target="132">0</b><span>variables del modelo</span>
+            </div>
+            <div class="lstat io-reveal" style="--d:1">
+                <b class="counter" data-target="14">0</b><span>niveles (stocks)</span>
+            </div>
+            <div class="lstat io-reveal" style="--d:2">
+                <b class="counter" data-target="22" data-suffix=" años">0</b><span>de horizonte simulado</span>
+            </div>
+            <div class="lstat io-reveal" style="--d:3">
+                <b class="counter" data-target="125">0</b><span>datos observados para contraste</span>
+            </div>
         </div>
+    </section>
+
+    <!-- ============ SUBSISTEMAS ============ -->
+    <section class="lsection" id="subsistemas">
+        <div class="lsection-head io-reveal">
+            <span class="ltag">Explora</span>
+            <h2>Cinco subsistemas, un panel interactivo</h2>
+            <p>Cada tarjeta muestra la proyección viva del modelo. Entra para superponer niveles,
+               contrastar contra datos reales y construir ratios.</p>
+        </div>
+
+        <div class="lcards">
+            {% for p in pestanas %}
+            <a href="{{ p.ruta }}" class="lcard io-reveal tilt" style="--d:{{ loop.index0 }}" data-spark="{{ p.clave }}">
+                <div class="lcard-top">
+                    <span class="lcard-ico">{{ p.icono }}</span>
+                    <span class="lcard-num">0{{ loop.index }}</span>
+                </div>
+                <h3>{{ p.nombre }}</h3>
+                <p>{{ indicadores[p.clave] }}</p>
+                <div class="lcard-spark">
+                    <svg viewBox="0 0 120 36" preserveAspectRatio="none"><polyline points="" fill="none"/></svg>
+                    <span class="lcard-spark-label">Proyección 2019–2040</span>
+                </div>
+                <span class="lcard-go">Analizar <span class="arrow">→</span></span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ============ CAPACIDADES ============ -->
+    <section class="lfeatures">
+        <div class="lfeatures-inner">
+            <div class="lfeat io-reveal" style="--d:0">
+                <span class="lfeat-ico">📈</span>
+                <h4>Superponer y normalizar</h4>
+                <p>Compara series de distintas unidades en un mismo lienzo con índice base 100.</p>
+            </div>
+            <div class="lfeat io-reveal" style="--d:1">
+                <span class="lfeat-ico">🎯</span>
+                <h4>Real vs simulado</h4>
+                <p>Datos observados sobre la curva del modelo, con error MAPE año por año.</p>
+            </div>
+            <div class="lfeat io-reveal" style="--d:2">
+                <span class="lfeat-ico">➗</span>
+                <h4>Ratios entre variables</h4>
+                <p>Cruza cualquier par de variables: flota por habitante, soles por tonelada…</p>
+            </div>
+            <div class="lfeat io-reveal" style="--d:3">
+                <span class="lfeat-ico">💾</span>
+                <h4>Escenarios guardados</h4>
+                <p>Persiste simulaciones en MySQL y superponlas para medir la diferencia.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ CTA FINAL ============ -->
+    <section class="lcta">
+        <div class="lcta-inner io-reveal">
+            <h2>¿Llegarán los rellenos sanitarios a 2040?</h2>
+            <p>La respuesta está en el modelo. Ábrelo y descúbrelo.</p>
+            <a href="/dashboard/disposicion" class="btn-glow">Ver vida útil de los rellenos <span class="arrow">→</span></a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>Datos calibrados 2019–2023 · Proyección a 2040 · Fuente: PIGARS SJL</p>
+        <p>Universidad Nacional de Ingeniería — Dinámica de Sistemas</p>
     </footer>
+
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
 </body>
 </html>

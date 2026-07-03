@@ -3,9 +3,8 @@ Script de verificación de instalación
 Ejecuta este script antes de iniciar la aplicación para verificar que todo está configurado correctamente.
 """
 
-import sys
 import os
-from pathlib import Path
+
 
 def verificar_archivo(ruta, descripcion):
     """Verifica que un archivo existe"""
@@ -15,6 +14,7 @@ def verificar_archivo(ruta, descripcion):
     else:
         print(f"✗ {descripcion}: NO ENCONTRADO")
         return False
+
 
 def verificar_paquete(nombre):
     """Verifica que un paquete de Python está instalado"""
@@ -26,81 +26,43 @@ def verificar_paquete(nombre):
         print(f"✗ {nombre}: NO INSTALADO")
         return False
 
-def verificar_env():
-    """Verifica las variables de entorno"""
+
+def verificar_sqlite():
+    """Verifica que la base de datos SQLite existe (o se puede crear)."""
     try:
-        from decouple import config
-        variables = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_NAME', 'MDL_URL', 'MDL_FILENAME']
-        todas_ok = True
-
-        for var in variables:
-            try:
-                valor = config(var)
-                print(f"✓ {var}: Configurado")
-            except:
-                print(f"✗ {var}: NO CONFIGURADO en .env")
-                todas_ok = False
-
-        # NGROK_TOKEN es opcional
-        try:
-            token = config('NGROK_TOKEN')
-            if token == 'TU_TOKEN_AQUI':
-                print(f"⚠ NGROK_TOKEN: No configurado (opcional - solo para acceso público)")
-            else:
-                print(f"✓ NGROK_TOKEN: Configurado")
-        except:
-            print(f"⚠ NGROK_TOKEN: No configurado (opcional)")
-
-        return todas_ok
-    except Exception as e:
-        print(f"✗ Error al leer .env: {e}")
-        return False
-
-def verificar_mysql():
-    """Verifica la conexión a MySQL"""
-    try:
-        import mysql.connector
-        from decouple import config
-
-        conn = mysql.connector.connect(
-            host=config('DB_HOST'),
-            port=config('DB_PORT'),
-            user=config('DB_USER'),
-            password=config('DB_PASSWORD', default=''),
-            database=config('DB_NAME')
-        )
-        conn.close()
-        print(f"✓ Conexión a MySQL: OK")
+        from db.init_db import ensure_db
+        ruta = ensure_db()  # no la sobreescribe si ya existe
+        print(f"✓ Base de datos SQLite: OK ({ruta})")
         return True
     except Exception as e:
-        print(f"✗ Conexión a MySQL: ERROR - {e}")
+        print(f"✗ Base de datos SQLite: ERROR - {e}")
         return False
 
-def verificar_xampp():
-    """Verifica que el archivo .mdl está accesible"""
+
+def verificar_modelo_mdl():
+    """Verifica que el archivo .mdl vendorizado está accesible."""
     try:
-        import urllib3
-        from decouple import config
-
-        http = urllib3.PoolManager()
-        url = config('MDL_URL')
-        response = http.request('GET', url, timeout=5.0)
-
-        if response.status == 200:
-            print(f"✓ Archivo .mdl en XAMPP: ACCESIBLE")
+        from src.Controllers.controller import _MDL_PATH_DEFECTO
+        from decouple import config, UndefinedValueError
+        try:
+            ruta = config('MDL_PATH', default=_MDL_PATH_DEFECTO)
+        except UndefinedValueError:
+            ruta = _MDL_PATH_DEFECTO
+        if os.path.isfile(ruta):
+            print(f"✓ Archivo del modelo Vensim (.mdl): OK ({ruta})")
             return True
-        else:
-            print(f"✗ Archivo .mdl en XAMPP: NO ACCESIBLE (código {response.status})")
-            return False
-    except Exception as e:
-        print(f"✗ Archivo .mdl en XAMPP: ERROR - {e}")
+        print(f"✗ Archivo del modelo Vensim (.mdl): NO ENCONTRADO en {ruta}")
         return False
+    except Exception as e:
+        print(f"✗ Archivo del modelo Vensim (.mdl): ERROR - {e}")
+        return False
+
 
 def main():
-    print("="*60)
+    print("=" * 60)
     print("VERIFICACIÓN DE INSTALACIÓN")
     print("Sistema de Gestión de Residuos Sólidos - San Juan de Lurigancho")
-    print("="*60)
+    print("=" * 60)
     print()
 
     errores = 0
@@ -114,8 +76,9 @@ def main():
         ('src/Controllers/controller.py', 'Controlador'),
         ('src/Models/model.py', 'Modelo'),
         ('src/Connection/connection.py', 'Conexión'),
-        ('.env', 'Variables de entorno'),
-        ('backup/vensimweb_sjl.sql', 'Script SQL'),
+        ('db/schema.sql', 'Esquema SQLite'),
+        ('db/init_db.py', 'Script de inicialización de BD'),
+        ('model/residuos_sjl.mdl', 'Modelo Vensim vendorizado'),
         ('templates/landing.html', 'Página de inicio'),
         ('templates/template.html', 'Plantilla de subsistemas'),
         ('templates/error.html', 'Página de error'),
@@ -131,45 +94,30 @@ def main():
     # 2. Verificar paquetes de Python
     print("2. DEPENDENCIAS DE PYTHON")
     print("-" * 40)
-    paquetes = ['flask', 'pyngrok', 'pysd', 'mysql.connector', 'decouple',
-                'numpy', 'urllib3', 'mpld3', 'matplotlib']
+    paquetes = ['flask', 'gunicorn', 'pysd', 'decouple', 'numpy']
 
     for paquete in paquetes:
-        nombre_import = 'mysql.connector' if paquete == 'mysql.connector' else paquete
-        if paquete == 'decouple':
-            nombre_import = 'decouple'
-        if paquete == 'mysql.connector':
-            nombre_import = 'mysql.connector'
-
-        if not verificar_paquete(nombre_import):
+        if not verificar_paquete(paquete):
             errores += 1
 
     print()
 
-    # 3. Verificar variables de entorno
-    print("3. VARIABLES DE ENTORNO")
+    # 3. Verificar base de datos SQLite
+    print("3. BASE DE DATOS SQLITE")
     print("-" * 40)
-    if not verificar_env():
+    if not verificar_sqlite():
         errores += 1
 
     print()
 
-    # 4. Verificar MySQL
-    print("4. BASE DE DATOS MYSQL")
+    # 4. Verificar archivo .mdl
+    print("4. MODELO VENSIM (.MDL)")
     print("-" * 40)
-    if not verificar_mysql():
+    if not verificar_modelo_mdl():
         errores += 1
 
     print()
-
-    # 5. Verificar XAMPP y archivo .mdl
-    print("5. XAMPP Y ARCHIVO .MDL")
-    print("-" * 40)
-    if not verificar_xampp():
-        errores += 1
-
-    print()
-    print("="*60)
+    print("=" * 60)
 
     if errores == 0:
         print("✓ VERIFICACIÓN COMPLETA: TODO OK")
@@ -178,7 +126,8 @@ def main():
         print(f"✗ VERIFICACIÓN COMPLETA: {errores} ERROR(ES) ENCONTRADO(S)")
         print("Por favor, revisa los errores antes de ejecutar la aplicación.")
 
-    print("="*60)
+    print("=" * 60)
+
 
 if __name__ == '__main__':
     main()
