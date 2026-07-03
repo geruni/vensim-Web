@@ -132,7 +132,7 @@ def main():
     print("2. DEPENDENCIAS DE PYTHON")
     print("-" * 40)
     paquetes = ['flask', 'pyngrok', 'pysd', 'mysql.connector', 'decouple',
-                'numpy', 'urllib3', 'mpld3', 'matplotlib']
+                'numpy', 'urllib3']
 
     for paquete in paquetes:
         nombre_import = 'mysql.connector' if paquete == 'mysql.connector' else paquete
