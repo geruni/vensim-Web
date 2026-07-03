@@ -28,8 +28,7 @@ def getModelBySubsistema(subsistema):
         cursor = conn.cursor(dictionary=True)
         query = (f"SELECT nivel, titulo, grupo, eje_x, eje_y, unidad, color, posicion "
                  f"FROM {tabla} ORDER BY posicion ASC")
-        connection_select(cursor, query)
-        resultado = cursor.fetchall()
+        resultado = connection_select(cursor, query)
         cursor.close()
         conn.close()
         return resultado
@@ -56,9 +55,9 @@ def getConfigCompleta():
         cursor = conn.cursor(dictionary=True)
         meta = {}
         for subsistema, tabla in TABLAS.items():
-            connection_select(cursor,
+            filas = connection_select(cursor,
                 f"SELECT nivel, titulo, grupo, unidad, color FROM {tabla} ORDER BY posicion ASC")
-            for fila in cursor.fetchall():
+            for fila in filas:
                 meta[fila['nivel']] = {
                     'titulo': fila['titulo'],
                     'grupo': fila['grupo'],
@@ -97,8 +96,7 @@ def getDatosReales(subsistema=None, niveles=None):
         if cond:
             query += " WHERE " + " AND ".join(cond)
         query += " ORDER BY nivel, anio ASC"
-        connection_select(cursor, query, tuple(params))
-        resultado = cursor.fetchall()
+        resultado = connection_select(cursor, query, tuple(params))
         cursor.close()
         conn.close()
         return resultado
@@ -146,9 +144,8 @@ def listarSimulaciones():
         return conn
     try:
         cursor = conn.cursor(dictionary=True)
-        connection_select(cursor,
+        resultado = connection_select(cursor,
             "SELECT id, nombre, descripcion, parametros, creado FROM simulaciones ORDER BY creado DESC")
-        resultado = cursor.fetchall()
         for r in resultado:
             if r.get('creado') is not None:
                 r['creado'] = str(r['creado'])
@@ -187,10 +184,9 @@ def getSimulacion(sim_id):
         return conn
     try:
         cursor = conn.cursor(dictionary=True)
-        connection_select(cursor,
+        resultado = connection_select(cursor,
             "SELECT nivel, anio, valor FROM simulacion_datos WHERE simulacion_id = %s ORDER BY nivel, anio",
             (sim_id,))
-        resultado = cursor.fetchall()
         cursor.close()
         conn.close()
         return resultado
