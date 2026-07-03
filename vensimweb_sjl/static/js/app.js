@@ -10,6 +10,73 @@
   const PLOT_FONT = { family: "-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif", color: "#241D14" };
   const GRID = "#EDE4D3";
   let ultimoDataset = null; // para exportar CSV
+  let PALANCAS = [];        // definición de sliders what-if (desde /api/palancas)
+
+  // ---------- palancas what-if ----------
+  const fmtPalanca = (p, v) => {
+    if (p.max >= 1e6) return (v / 1e6).toFixed(0) + " M";
+    if (p.paso < 1) return (+v).toFixed(String(p.paso).split(".")[1]?.length || 2);
+    return String(v);
+  };
+
+  function paramsActuales() {
+    const out = {};
+    $$("#lista-palancas input[type=range]").forEach((s) => {
+      const p = PALANCAS.find((x) => x.nombre === s.dataset.nombre);
+      if (p && +s.value !== p.defecto) out[p.nombre] = +s.value;
+    });
+    return out;
+  }
+  const hayWhatIf = () => Object.keys(paramsActuales()).length > 0;
+  const paramsQS = () => {
+    const p = paramsActuales();
+    return Object.keys(p).length ? "&params=" + encodeURIComponent(JSON.stringify(p)) : "";
+  };
+
+  function actualizarBadgeWhatIf() {
+    $("#whatif-badge").classList.toggle("hidden", !hayWhatIf());
+  }
+
+  let debounceTimer;
+  function construirPalancas() {
+    const cont = $("#lista-palancas");
+    api("/api/palancas").then((defs) => {
+      PALANCAS = defs;
+      cont.innerHTML = "";
+      defs.forEach((p) => {
+        const row = document.createElement("div");
+        row.className = "palanca";
+        row.innerHTML =
+          `<div class="palanca-head"><span class="palanca-nombre">${p.etiqueta}</span>` +
+          `<span class="palanca-valor" id="pv-${p.nombre.replace(/\s+/g, "_")}">${fmtPalanca(p, p.defecto)}</span></div>` +
+          `<input type="range" min="${p.min}" max="${p.max}" step="${p.paso}" value="${p.defecto}" data-nombre="${p.nombre}">` +
+          `<div class="palanca-meta"><span>${p.subsistema}</span><span>${p.unidad}</span></div>`;
+        cont.appendChild(row);
+        const slider = $("input", row);
+        slider.addEventListener("input", () => {
+          $(`#pv-${p.nombre.replace(/\s+/g, "_")}`).textContent = fmtPalanca(p, slider.value);
+          row.classList.toggle("modificada", +slider.value !== p.defecto);
+          actualizarBadgeWhatIf();
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(render, 420);
+        });
+      });
+    }).catch(() => {
+      cont.innerHTML = '<p class="muted">No se pudieron cargar las palancas.</p>';
+    });
+    $("#palancas-reset").addEventListener("click", () => {
+      $$("#lista-palancas input[type=range]").forEach((s) => {
+        const p = PALANCAS.find((x) => x.nombre === s.dataset.nombre);
+        if (!p) return;
+        s.value = p.defecto;
+        $(`#pv-${p.nombre.replace(/\s+/g, "_")}`).textContent = fmtPalanca(p, p.defecto);
+        s.closest(".palanca").classList.remove("modificada");
+      });
+      actualizarBadgeWhatIf();
+      render();
+    });
+    $("#ver-base").addEventListener("change", () => hayWhatIf() && render());
+  }
 
   // ---------- utilidades ----------
   const fmt = (v) => {
@@ -111,31 +178,49 @@
   }
 
   // ---------- render: SUPERPONER ----------
+  const normalizar = (vals) => {
+    const base = vals.find((v) => v !== null && v !== 0);
+    return vals.map((v) => (v === null || !base ? null : (v / base) * 100));
+  };
+
   async function renderSuperponer() {
     const niveles = nivelesSeleccionados();
     if (!niveles.length) { toast("Selecciona al menos un nivel.", "warn"); return; }
     const norm = $("#normalizar").checked;
-    const data = await api("/api/series?niveles=" + encodeURIComponent(niveles.join(",")));
+    const whatif = hayWhatIf();
+    const q = encodeURIComponent(niveles.join(","));
+    const data = await api("/api/series?niveles=" + q + paramsQS());
     ultimoDataset = { tipo: "series", years: data.years, series: data.series };
 
     const traces = Object.keys(data.series).map((nivel) => {
       const s = data.series[nivel];
-      let y = s.valores;
-      if (norm) {
-        const base = y.find((v) => v !== null && v !== 0);
-        y = y.map((v) => (v === null || !base ? null : (v / base) * 100));
-      }
+      const y = norm ? normalizar(s.valores) : s.valores;
       return {
-        x: data.years, y, name: s.titulo, mode: "lines",
+        x: data.years, y, name: s.titulo + (whatif ? " (what-if)" : ""), mode: "lines",
         line: { color: s.color, width: 2.5, shape: "spline" },
         hovertemplate: `<b>${s.titulo}</b><br>%{x}: %{y:.2f} ${norm ? "" : s.unidad}<extra></extra>`,
       };
     });
+
+    // corrida base punteada para dimensionar el efecto de las palancas
+    if (whatif && $("#ver-base").checked) {
+      const base = await api("/api/series?niveles=" + q);
+      Object.keys(base.series).forEach((nivel) => {
+        const s = base.series[nivel];
+        traces.push({
+          x: base.years, y: norm ? normalizar(s.valores) : s.valores,
+          name: s.titulo + " (base)", mode: "lines",
+          line: { color: s.color, width: 1.6, dash: "dot" }, opacity: 0.55,
+          hovertemplate: `%{x}: %{y:.2f}<extra>${s.titulo} base</extra>`,
+        });
+      });
+    }
+
     const yTitle = norm ? "Índice (2019 = 100)" : unidadComun(data.series);
     dibujar(traces, `Evolución — ${CFG.subsistemaNombre}`, yTitle);
     pintarKPIs(data.years, data.series);
     ocultarTabla();
-    $("#chart-hint").textContent = norm ? "Normalizado base 100" : "Valores absolutos";
+    $("#chart-hint").textContent = whatif ? "Escenario what-if activo" : (norm ? "Normalizado base 100" : "Valores absolutos");
     await superponerEscenarioActivo(traces, norm);
   }
 
@@ -148,7 +233,7 @@
   async function renderComparar() {
     const niveles = nivelesSeleccionados();
     if (!niveles.length) { toast("Selecciona al menos un nivel.", "warn"); return; }
-    const data = await api(`/api/comparar?subsistema=${CFG.subsistema}&niveles=${encodeURIComponent(niveles.join(","))}`);
+    const data = await api(`/api/comparar?subsistema=${CFG.subsistema}&niveles=${encodeURIComponent(niveles.join(","))}` + paramsQS());
     ultimoDataset = { tipo: "comparar", years: data.years, series: data.series };
 
     const traces = [];
@@ -203,7 +288,7 @@
   async function renderRatio() {
     const a = $("#ratio-a").value, b = $("#ratio-b").value;
     if (a === b) { toast("Elige dos variables distintas.", "warn"); return; }
-    const data = await api(`/api/ratio?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+    const data = await api(`/api/ratio?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}` + paramsQS());
     ultimoDataset = { tipo: "ratio", years: data.years, valores: data.valores, etiqueta: data.etiqueta };
     const trace = {
       x: data.years, y: data.valores, name: data.etiqueta, mode: "lines",
@@ -267,8 +352,9 @@
       lista.forEach((e) => {
         const el = document.createElement("div");
         el.className = "escenario";
+        const gear = e.parametros ? ' <span class="esc-gear" title="Escenario con palancas modificadas">⚙</span>' : "";
         el.innerHTML =
-          `<button class="esc-load" data-id="${e.id}">${e.nombre}</button>` +
+          `<button class="esc-load" data-id="${e.id}">${e.nombre}${gear}</button>` +
           `<span class="esc-fecha">${(e.creado || "").slice(0, 10)}</span>`;
         cont.appendChild(el);
       });
@@ -309,12 +395,16 @@
   async function guardarEscenario() {
     const niveles = nivelesSeleccionados();
     if (!niveles.length) { toast("Selecciona niveles para guardar.", "warn"); return; }
-    const nombre = prompt("Nombre del escenario:", "Escenario base " + CFG.subsistemaNombre);
+    const sugerido = (hayWhatIf() ? "What-if " : "Escenario base ") + CFG.subsistemaNombre;
+    const nombre = prompt("Nombre del escenario:", sugerido);
     if (!nombre) return;
     try {
       await api("/api/guardar", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, descripcion: "Subsistema " + CFG.subsistemaNombre, niveles }),
+        body: JSON.stringify({
+          nombre, descripcion: "Subsistema " + CFG.subsistemaNombre,
+          niveles, params: paramsActuales(),
+        }),
       });
       toast("Escenario guardado en la base de datos.", "ok");
       cargarEscenarios();
@@ -381,6 +471,7 @@
   function init() {
     construirNiveles();
     construirRatioSelects();
+    construirPalancas();
     aplicarModo();
     $$('input[name=modo]').forEach((r) => r.addEventListener("change", () => { aplicarModo(); render(); }));
     $("#btn-graficar").addEventListener("click", render);

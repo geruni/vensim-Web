@@ -110,10 +110,11 @@ def getDatosReales(subsistema=None, niveles=None):
 # ---------------------------------------------------------------------------
 # Escenarios simulados guardados
 # ---------------------------------------------------------------------------
-def guardarSimulacion(nombre, descripcion, datos):
+def guardarSimulacion(nombre, descripcion, datos, parametros=None):
     """
     Persiste un escenario simulado. `datos` es una lista de tuplas
-    (nivel, anio, valor). Retorna {'id': nuevo_id} o {'error': ...}.
+    (nivel, anio, valor); `parametros` es un JSON string con las palancas
+    aplicadas (o None si es la corrida base). Retorna {'id': ...} o {'error': ...}.
     """
     if not nombre or not datos:
         return {'error': 'Falta el nombre del escenario o los datos a guardar.'}
@@ -123,8 +124,8 @@ def guardarSimulacion(nombre, descripcion, datos):
     try:
         cursor = conn.cursor()
         connection_execute(cursor,
-            "INSERT INTO simulaciones (nombre, descripcion) VALUES (%s, %s)",
-            (nombre, descripcion or ''))
+            "INSERT INTO simulaciones (nombre, descripcion, parametros) VALUES (%s, %s, %s)",
+            (nombre, descripcion or '', parametros))
         sim_id = cursor.lastrowid
         cursor.executemany(
             "INSERT INTO simulacion_datos (simulacion_id, nivel, anio, valor) VALUES (%s, %s, %s, %s)",
@@ -146,7 +147,7 @@ def listarSimulaciones():
     try:
         cursor = conn.cursor(dictionary=True)
         connection_select(cursor,
-            "SELECT id, nombre, descripcion, creado FROM simulaciones ORDER BY creado DESC")
+            "SELECT id, nombre, descripcion, parametros, creado FROM simulaciones ORDER BY creado DESC")
         resultado = cursor.fetchall()
         for r in resultado:
             if r.get('creado') is not None:

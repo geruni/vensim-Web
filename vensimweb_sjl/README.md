@@ -122,6 +122,11 @@ en `static/js/plotly.min.js`, sin necesidad de internet). Funciones:
   porcentual y el **MAPE** (error porcentual absoluto medio) coloreado por nivel de ajuste.
 - **Ratios A / B**: calcula y grafica el cociente entre cualquier par de variables
   del modelo a lo largo del horizonte.
+- **Palancas de política (what-if)**: sliders para re-simular el modelo cambiando
+  constantes clave (voluntad política de reciclaje, arbitrio por habitante,
+  transferencias MEF, meta de cobertura, presupuesto de flota, tasa de natalidad).
+  Al mover una palanca se superpone la corrida base punteada para dimensionar el
+  efecto, y los escenarios guardados registran qué palancas se usaron.
 - **KPIs** con el valor final, el cambio respecto a 2019, máximos y mínimos.
 - **Guardar escenarios** simulados en la base de datos y superponerlos luego para comparar.
 - **Exportar** el gráfico a PNG (barra de Plotly) o los datos a **CSV**.
@@ -130,11 +135,15 @@ en `static/js/plotly.min.js`, sin necesidad de internet). Funciones:
 
 | Endpoint | Descripción |
 |---|---|
-| `GET /api/series?niveles=a,b` | Series simuladas de los niveles indicados |
-| `GET /api/comparar?subsistema=..&niveles=a,b` | Real vs simulado + diferencia, ratio y MAPE |
-| `GET /api/ratio?a=..&b=..` | Serie del cociente A/B en el tiempo |
-| `POST /api/guardar` | Guarda un escenario simulado (`{nombre, descripcion, niveles}`) |
+| `GET /api/palancas` | Palancas what-if disponibles (nombre, rango, defecto) |
+| `GET /api/series?niveles=a,b[&params=<json>]` | Series simuladas; `params` re-simula con palancas |
+| `GET /api/comparar?subsistema=..&niveles=a,b[&params=<json>]` | Real vs simulado + diferencia, ratio y MAPE |
+| `GET /api/ratio?a=..&b=..[&params=<json>]` | Serie del cociente A/B en el tiempo |
+| `POST /api/guardar` | Guarda un escenario (`{nombre, descripcion, niveles, params}`) |
 | `GET /api/escenarios` · `GET /api/escenario/<id>` | Lista / recupera escenarios guardados |
+
+Las palancas se validan contra una lista blanca con rangos (`PALANCAS` en
+`controller.py`); cualquier otro parámetro o valor fuera de rango se rechaza con 400.
 
 ## Base de datos
 

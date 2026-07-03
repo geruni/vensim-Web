@@ -89,6 +89,7 @@ CREATE TABLE simulaciones (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     nombre      VARCHAR(120) NOT NULL,
     descripcion VARCHAR(255),
+    parametros  TEXT NULL,
     creado      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

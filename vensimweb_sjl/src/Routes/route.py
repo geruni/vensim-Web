@@ -1,8 +1,10 @@
+import json
 from flask import Blueprint, render_template, request, jsonify, Response
 from src.Models.model import getModelBySubsistema, getConfigCompleta
 from src.Controllers.controller import (
     get_series, comparar, ratio_entre,
     guardar_escenario, listar_escenarios, get_escenario,
+    PALANCAS, validar_params,
 )
 
 routes = Blueprint('routes', __name__)
@@ -30,6 +32,24 @@ def _niveles_param():
     """Lee ?niveles=a,b,c y devuelve la lista (o vacía)."""
     raw = request.args.get('niveles', '').strip()
     return [n for n in raw.split(',') if n] if raw else []
+
+
+def _params_param(fuente=None):
+    """
+    Lee las palancas what-if desde ?params=<json> (o de un dict ya deserializado)
+    y las valida contra la lista blanca. Retorna dict limpio o {'error': ...}.
+    """
+    if fuente is None:
+        raw = request.args.get('params', '').strip()
+        if not raw:
+            return {}
+        try:
+            fuente = json.loads(raw)
+        except ValueError:
+            return {'error': 'El parámetro "params" no es JSON válido.'}
+    if not isinstance(fuente, dict):
+        return {'error': 'Las palancas deben enviarse como objeto JSON.'}
+    return validar_params(fuente)
 
 
 def _json_or_error(payload, code_ok=200):
@@ -83,12 +103,21 @@ def dashboard(subsistema='generacion'):
 # ---------------------------------------------------------------------------
 # API JSON
 # ---------------------------------------------------------------------------
+@routes.route('/api/palancas')
+def api_palancas():
+    """Lista blanca de palancas what-if con sus rangos, para construir los sliders."""
+    return jsonify(PALANCAS)
+
+
 @routes.route('/api/series')
 def api_series():
     niveles = _niveles_param()
     if not niveles:
         return jsonify({'error': 'No se indicaron niveles.'}), 400
-    return _json_or_error(get_series(niveles))
+    params = _params_param()
+    if 'error' in params:
+        return jsonify(params), 400
+    return _json_or_error(get_series(niveles, params=params))
 
 
 @routes.route('/api/comparar')
@@ -97,7 +126,10 @@ def api_comparar():
     niveles = _niveles_param()
     if not subsistema or not niveles:
         return jsonify({'error': 'Faltan parámetros subsistema/niveles.'}), 400
-    return _json_or_error(comparar(subsistema, niveles))
+    params = _params_param()
+    if 'error' in params:
+        return jsonify(params), 400
+    return _json_or_error(comparar(subsistema, niveles, params=params))
 
 
 @routes.route('/api/ratio')
@@ -106,7 +138,10 @@ def api_ratio():
     b = request.args.get('b', '')
     if not a or not b:
         return jsonify({'error': 'Faltan las variables a/b para el ratio.'}), 400
-    return _json_or_error(ratio_entre(a, b))
+    params = _params_param()
+    if 'error' in params:
+        return jsonify(params), 400
+    return _json_or_error(ratio_entre(a, b, params=params))
 
 
 @routes.route('/api/guardar', methods=['POST'])
@@ -117,7 +152,10 @@ def api_guardar():
     niveles = data.get('niveles') or []
     if not nombre or not niveles:
         return jsonify({'error': 'Indica un nombre y al menos un nivel para guardar.'}), 400
-    return _json_or_error(guardar_escenario(nombre, descripcion, niveles))
+    params = _params_param(data.get('params') or {})
+    if 'error' in params:
+        return jsonify(params), 400
+    return _json_or_error(guardar_escenario(nombre, descripcion, niveles, params=params))
 
 
 @routes.route('/api/escenarios')
